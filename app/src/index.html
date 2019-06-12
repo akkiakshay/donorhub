@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+ <head>
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+ <script src="index.js"></script>
+ <title>DonorHub</title>
+ </head>
+ <body>
+<nav class="navbar navbar-expand-lg navbar-primary bg-light">
+ <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggler" aria-controls="navbarToggler" aria-expanded="false" aria-label="Toggle navigation">
+ <span class="navbar-toggler-icon"></span>
+ </button>
+ <a class="navbar-brand" href="#">DonorHub</a>
+<div class="collapse navbar-collapse" id="navbarToggler">
+ <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
+        <li>
+                <a href="#" onclick="App.loadPublicLedger()">
+                      <i class="fa fa-tachometer-alt"></i>
+                      <span>Public Ledger</span>   
+                    </a> 
+              </li>
+ </div>
+ </nav>
+<div class="container-fluid">
+    <div class="alert alert-success mt-3" role="alert" id="show-hash" style="display:none">
+        <span id="ipfs-hash"></span> Use this Hash to login
+        </div>
+<div class="row">
+<div class="col-lg-4 px-2 mt-1 mb-1">
+ <div class="card card-profile-signup p-1">
+    <form>
+        <div class="card-body">
+                <nav>
+                        <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                          <a class="nav-item nav-link active" id="nav-home-tab" data-toggle="tab" href="#nav-home" role="tab" aria-controls="nav-home" aria-selected="true">Create Profile</a>
+                          <a class="nav-item nav-link" id="nav-profile-tab" data-toggle="tab" href="#nav-profile" role="tab" aria-controls="nav-profile" aria-selected="false">Donor Login</a>
+                          <a class="nav-item nav-link" id="nav-contact-tab" data-toggle="tab" href="#nav-contact" role="tab" aria-controls="nav-contact" aria-selected="false">Organisation Login</a>
+                        </div>
+                      </nav>
+                      <div class="tab-content" id="nav-tabContent">
+                        <div class="tab-pane fade show active " id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
+
+                                <div class="p-4">
+
+                            
+                                <div class="form-group">
+                                    <label for="username">Username</label>
+                                    <input type="text" class="form-control" id="sign-up-username" required="required">
+                                </div>
+                                <div class="form-group">
+                                    <label for="username">Title</label>
+                                    <input type="text" class="form-control" id="sign-up-title">
+                                </div>
+                     
+                                <div class="form-group">
+                     
+                                    <label for="type-label">Profile Type</label>
+                                    <select class="form-control" id="type">
+                                        <option selected disabled hidden>Select Type</option>
+                                        <option value="Organisation">Organisation</option>
+                                        <option value="Donor">Donor</option>
+                         
+                                    </select>
+                                </div>
+                                <p id="accounts">
+                                    ETH Address:
+                                    <span class="eth-address"></span>
+                                    <select class="form-control" id="sign-up-eth-address">
+                    
+                                    </select>
+                                </p>
+                                <button type="submit" class="btn btn-primary btn-disabled" id="sign-up-user" style="display:none">Sign Up User</button> 
+                                <button type="submit" class="btn btn-primary btn-disabled" id="sign-up-org" style="display:none">Sign Up Organisation</button> 
+                                </div>
+                    
+                        </div>
+                        <div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab">
+                             <div class="p-4">
+
+                            
+                                    <div class="form-group">
+                                        <label for="username">Username</label>
+                                        <input type="text" class="form-control" id="login-username-donor" required="required">
+                                    </div>
+                                    <div class="form-group">
+                                     <label for="ipfshash">IpFs Hash</label>
+                                     <input type="text" class="form-control" id="login-ipfshash-donor" required="required">
+                                     </div>
+                                    
+                                    <button type="submit" class="btn btn-primary" id="log-in-donor">Log In</button>
+                                    <span id="success"></span><span id="failed"></span> 
+                                </div>
+                        </div>
+                        <div class="tab-pane fade" id="nav-contact" role="tabpanel" aria-labelledby="nav-contact-tab">
+                                <div class="p-4">
+
+                            
+                                        <div class="form-group">
+                                            <label for="username">Username</label>
+                                            <input type="text" class="form-control" id="login-username-org" required="required">
+                                        </div>
+                                        <div class="form-group">
+                                         <label for="ipfshash">IpFs Hash</label>
+                                         <input type="text" class="form-control" id="login-ipfshash-org" required="required">
+                                         </div>
+                                        
+                                        <button type="submit" class="btn btn-primary" id="log-in-org">Log In</button>
+                                        <span id="success-org"></span><span id="failed"></span> 
+                                    </div>
+                        </div>
+                      </div>
+            
+        </div>
+    </form>
+ </div>
+</div>
+<div class="col-lg-4 mt-3 mb-1" id="users-div">
+    <h5>Donors</h5>
+    <hr>
+ </div>
+ <div class="col-lg-4 mt-3 mb-1" id="org-div">
+        <h5>Organisation</h5>
+        <hr>
+    </div>
+</div>
+</div>
+<footer class="footer">
+ <div class="container">
+
+ </div>
+ </footer>
+
+ <script>
+    $(document).ready(function () {
+        
+        $('#type').change(function() {
+            var val = $(this).find(':selected').text()
+
+            if(val === 'Organisation') {
+                $('#accounts').hide()
+                $('#sign-up-user').hide()
+                $('#sign-up-org').show()
+                $('#sign-up-org').removeClass('btn-disabled')
+            }
+            else {
+                $('#accounts').show()
+                $('#sign-up-org').hide()
+                $('#sign-up-user').show()
+                $('#sign-up-user').removeClass('btn-disabled')
+            }
+        })
+        
+    });
+</script>
+
+</body>
+</html>

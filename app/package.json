@@ -1,0 +1,32 @@
+{
+  "name": "app",
+  "version": "1.0.0",
+  "description": "",
+  "private": true,
+  "scripts": {
+    "build": "webpack",
+    "dev": "webpack-dev-server"
+  },
+  "devDependencies": {
+    "copy-webpack-plugin": "^4.6.0",
+    "webpack": "^4.28.1",
+    "webpack-cli": "^3.2.1",
+    "webpack-dev-server": "^3.1.14"
+  },
+  "dependencies": {
+    "bootstrap": "^4.3.1",
+    "css-loader": "^2.1.1",
+    "ipfs-api": "^26.1.2",
+    "jquery": "^3.4.1",
+    "jquery.cookie": "^1.4.1",
+    "node-sass": "^4.12.0",
+    "popper.js": "^1.15.0",
+    "postcss-loader": "^3.0.0",
+    "precss": "^4.0.0",
+    "sass-loader": "^7.1.0",
+    "style-loader": "^0.23.1",
+    "truffle-contract": "^3.0.6",
+    "truffle-hdwallet-provider": "^1.0.8",
+    "web3": "^1.0.0-beta.37"
+  }
+}
