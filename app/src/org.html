@@ -63,7 +63,7 @@
                   </li>
                   
                       <li>
-                        <a href="#" onclick="App.logOut()">
+                        <a href="#" onclick="UserMod.logOut()">
                               <i class="fa fa-tachometer-alt"></i>
                               <span>Logout</span>   
                             </a> 
@@ -129,10 +129,10 @@
                    </div>
                   
                    
-                   <div class="form-group">
+                   <div class="form-group" style="display:none">
                    
                    <label for="type-label">Project Fee</label>
-                   <input type="text" class="form-control" id="fee">   
+                   <input type="text" class="form-control" id="fee" value="20">   
                    </div>
                   
                    <div class="form-group">
@@ -151,7 +151,7 @@
               <div class="modal-footer">
                 
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" onclick="App.createProject()">Save changes</button>
+                <button type="button" class="btn btn-primary" onclick="Project.createProject()">Save changes</button>
               </div>
             </div>
           </div>

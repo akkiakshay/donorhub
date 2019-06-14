@@ -26,7 +26,7 @@ contract FundingHub {
     event ProjectSupported(address addr, uint amount);
     event Contrib(string[] projectcontrib);
 
-    constructor(uint _minimumEntryFee) public {
+    constructor(uint  _minimumEntryFee) public {
         minimumEntryFee = _minimumEntryFee;
     }
     function submitProject(string memory name, string memory url,uint goal,string memory username) payable public returns (bool success) {
@@ -83,7 +83,7 @@ contract FundingHub {
         }
        
         if (!projects[addr].initialized) {
-            revert("Not initialized nigga");
+            revert("Not initialized");
         }
         if (projects[addr].goal >= projects[addr].funds + msg.value) {
             projects[addr].funds += msg.value;
@@ -149,7 +149,7 @@ contract FundingHub {
             }
 
         }
-        emit Contrib(projectcontrib);
+        
         return projectcontrib;
     }
 }

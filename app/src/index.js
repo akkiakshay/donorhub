@@ -1,17 +1,13 @@
-// Import the page's CSS. Webpack will know what to do with it.
 import jQuery from "jquery";
 import 'jquery.cookie';
 window.$ = window.jQuery = jQuery;
 import 'bootstrap';
 
-// Import the scss for full app (webpack will package it)
 import "./stylesheets/app.scss";
 
-// Import libraries we need.
 import { default as Web3 } from 'web3'
 import { default as contract } from 'truffle-contract'
 
-// Import our contract artifacts and turn them into usable abstractions.
 import FundinghubArtifacts from '../../build/contracts/FundingHub.json'
 
 import user_artifacts from '../../build/contracts/User.json'
@@ -19,13 +15,10 @@ import organisation_artifacts from '../../build/contracts/Organisation.json'
 const User = contract(user_artifacts)
 const Organisation = contract(organisation_artifacts)
 
-// User is our usable abstraction, which we'll use through the code below.
 const FundingHub = contract(FundinghubArtifacts)
 const ipfsAPI = require('ipfs-api');
 const ipfs = ipfsAPI('localhost', '5001');
-// The following code is simple to show off interacting with your contracts.
-// As your needs grow you will likely need to change its form and structure.
-// For application bootstrapping, check out window.addEventListener below.
+
 let accounts
 let account
 const App = {
@@ -38,7 +31,7 @@ const App = {
 
         const self = this
 
-        // Bootstrap the User abstraction for Use.
+       
         User.setProvider(web3.currentProvider)
         FundingHub.setProvider(web3.currentProvider)
         Organisation.setProvider(web3.currentProvider)
@@ -51,7 +44,7 @@ const App = {
             };
         }
 
-        // Get the initial account balance so it can be displayed.
+        
         web3.eth.getAccounts(function(err, accs) {
             if (err != null) {
                 alert('There was an error fetching your accounts.')
@@ -88,43 +81,245 @@ const App = {
             
         })
 
-        self.getUsers();
-        self.getOrgs();
+        UserMod.getUsers();
+        UserMod.getOrgs();
 
         
         
         var signUpDonor = $('#sign-up-user').click(function() {
-            self.createUser();
+            UserMod.createUser();
             
             return false;
           })
         
           var signUpOrg = $('#sign-up-org').click(function() {
-            self.createOrganisation();
+            UserMod.createOrganisation();
             
             return false;
           })
 
         var loginDonor = $('#log-in-donor').click(function() {
-            self.loginUser();
+            UserMod.loginUser();
             return false;
         })
         
         var loginOrg = $('#log-in-org').click(function() {
-            self.loginOrg();
+            UserMod.loginOrg();
             return false;
         })
 
     },
 
-    
+
+    showProjects: function() {
+        var host = window.location.host + '/showprojects.html'
+        window.location = 'showprojects.html';
+
+    },
+
+    loadPublicLedger: function() {
+        var host = window.location.host + '/publicledger.html'
+        window.location = 'publicledger.html';
+    },
+
+    publicLedger: function() {
+        App.getTransactionByAccount(null,null);
+    },
+
+    showProjectLoad: function() {
+        var username = $.cookie("username");
+        var title = $.cookie("title");
+        var type = $.cookie("type");
+        var ethaddress = $.cookie("ethaddress");
+
+        $('#username').text(username);
+        $('#title').text(title);
+        $('#type').text(type);
+        $('#ethaddress').text(ethaddress);
+
+        var load = Project.getProjects();
+
+        return true;
+    },
+    alertmsg: function(msg,content,type) {
+        $('#success').find('h5').text(msg)
+        $('#success').find('small').text(content)
+        if(type === 1) {
+            $('#success').addClass('alert-success')
+        }
+        else {
+            $('#success').addClass('alert-danger')
+        }
+        $('#success').show()
+    },
 
     
 
-    loadAddProjects: function() {
+
+    orgload: function() {
+        var self = this
+        var username = $.cookie("username");
+        var title = $.cookie("title");
+        var type = $.cookie("type");
+        
+
+        $('#username').text(username);
+        $('#title').text(title);
+        $('#type').text(type);
+        var InstanceUsed;
+        FundingHub.deployed().then(function(instance){
+            InstanceUsed = instance
+            return InstanceUsed.fundsCollectedByUser(username).then(result => {
+                $('#balance').text(result);
+            })
+        })
+        
+
+        
+        var proj = Project.getOrgsProject();
+
+        return true;
+    },
+
+    userload: function() {
+        var self = this
+        var username = $.cookie("username");
+        var title = $.cookie("title");
+        var type = $.cookie("type");
+        var ethaddress = $.cookie("ethaddress");
+
+        $('#username').text(username);
+        $('#title').text(title);
+        $('#type').text(type);
+        $('#ethaddress').text(ethaddress);
+        var destinationBalance;
+        web3.eth.getBalance(ethaddress).then(function(destinationBalanceWei) {
+            console.log(destinationBalanceWei)
+             destinationBalance = self.fromWei(destinationBalanceWei);
+             $('#balance').text(destinationBalance) 
+         });
+
+        var load = Project.getProjects();
+        
+
+        return true;
+    },
+
+    projload: function() {
+        var username = $.cookie("username");
+        var title = $.cookie("title");
+        var type = $.cookie("type");
+        var ethaddress = $.cookie("ethaddress");
+
+        $('#username').text(username);
+        $('#title').text(title);
+        $('#type').text(type);
+        $('#ethaddress').text(ethaddress);
+
+        var load = Project.getProjects();
+
+        return true;
+    },
+
+    toWei: function(ethvalue) {
+        return web3.utils.toWei(ethvalue,"ether");
+    },
+
+    fromWei: function(ethvalue) {
+        return web3.utils.fromWei(ethvalue,"ether");
+    },
+
+   
+    
+
+  
+
+    getTransactionByAccount: function(endBlockNumber,startBlockNumber) {
+        
+        web3.eth.getBlockNumber(function(error,result) {
+            if (endBlockNumber == null) {
+                endBlockNumber = result;
+                console.log("Using endBlockNumber: ",endBlockNumber);
+              }
+            if (startBlockNumber == null) {
+                startBlockNumber = 0;
+                console.log("Using startBlockNumber: " + startBlockNumber);
+              }
+            
+              for (var i = startBlockNumber; i <= endBlockNumber; i++) {
+                console.log("Searching block " + i);
+                
+                web3.eth.getBlock(i,true,function(error,block){
+                    
+                        var transtemplate = "";
+                        block.transactions.forEach( function(e) {
+                          if (true) {
+                               transtemplate += `<tr><td>tx hash</td><td>` + e.hash + `</td></tr>
+                              <tr><td>nonce</td><td>` + e.nonce + `</td></tr>
+                              <tr><td>blockHash</td><td>` + e.blockHash + `</td></tr>
+                              <tr><td>blockNumber</td><td>` + e.blockNumber + `</td></tr>
+                              <tr><td>transactionIndex</td><td>` + e.transactionIndex + `</td></tr>
+                              <tr><td>from</td><td>` + e.from + `</td></tr> 
+                              <tr><td>to  </td><td>` + e.to + `</td></tr>
+                              <tr><td>value</td><td>` + e.value + `</td></tr>
+                              <tr><td>time</td><td>` + block.timestamp + ``  + new Date(block.timestamp * 1000).toGMTString() + `</td></tr>
+                              <tr><td>gasPrice</td><td>` + e.gasPrice + `</td></tr>
+                              <tr><td>gas </td><td>` + e.gas + `</td></tr>` 
+                          }
+                        }) 
+                        var card = `<div class="col-6"><div class="card bg-light mb-3" >
+                        <div class="card-header">Block `+block.number+`</div>
+                        <div class="card-body">
+                          <table class="table">
+                            <tr>
+                                <td>Hash</td>
+                                <td>`+ block.hash +`</td>
+                            </tr>
+                            <tr>
+                                <td>gasLimit</td>
+                                <td>`+block.gasLimit+`</td>
+                            </tr>
+                            <tr>
+                                <td>gasUsed</td>
+                                <td>`+block.gasUsed+`</td>
+                            </tr>
+                            <tr>
+                                <td>Timestamp</td>
+                                <td>`+ new Date(block.timestamp * 1000).toGMTString()  +`</td>
+                            </tr>
+                            <tr>
+                                <td>Transactions</td>
+                                <td><table class="table inside">`+ transtemplate +`</table></td>
+                            </tr>
+                            <tr>
+                                <td>Transaction Root</td>
+                                <td>`+ block.transactionsRoot +`</td>
+                            </tr>
+                           
+
+                          </table>
+                          
+                        </div>
+                      </div></div>`;       
+                        $('#ledger').append(card);
+                        
+                });
+                
+                
+              }
+
+            
+        })
         
     },
 
+   
+
+    
+    
+}
+
+const UserMod = {
     logOut: function() {
         $.removeCookie("username");
         $.removeCookie("title");
@@ -337,9 +532,9 @@ const App = {
         var rowCount = 0;
             var usersDiv = $('#users-div');
             var currentRow;
-        for(var i = 0; i < userCount; i++) {
+        for(var i = 1; i < userCount; i++) {
         var userCardId = 'user-card-' + i;
-        if(i % 4 == 0) {
+        if(i % 4 == 1) {
                 var currentRowId = 'user-row-' + rowCount;
                 var userRowTemplate = '<div class="row" id="' + currentRowId + '"></div>';
                 usersDiv.append(userRowTemplate);
@@ -365,7 +560,7 @@ const App = {
         currentRow.append(userTemplate);
         }
         console.log("getting users...");
-        for(var i = 0; i < userCount; i++) {
+        for(var i = 1; i < userCount; i++) {
         self.getAUser(instanceUsed, i);
         }
         })
@@ -413,9 +608,9 @@ const App = {
         var rowCount = 0;
             var usersDiv = $('#org-div');
             var currentRow;
-        for(var i = 0; i < userCount; i++) {
+        for(var i = 1; i < userCount; i++) {
         var userCardId = 'org-card-' + i;
-        if(i % 4 == 0) {
+        if(i % 4 == 1) {
                 var currentRowId = 'org-row-' + rowCount;
                 var userRowTemplate = '<div class="row" id="' + currentRowId + '"></div>';
                 usersDiv.append(userRowTemplate);
@@ -439,12 +634,14 @@ const App = {
         currentRow.append(userTemplate);
         }
         console.log("getting users...");
-        for(var i = 0; i < userCount; i++) {
+        for(var i = 1; i < userCount; i++) {
         self.getAOrg(instanceUsed, i);
         }
         })
     },
+}
 
+const Project = {
     getAProject: function(instance,i) {
         var InstanceUsed = instance;
         var projectCardId = 'project-card-' + i;
@@ -472,31 +669,6 @@ const App = {
 
     },
 
-    loadPublicLedger: function() {
-        var host = window.location.host + '/publicledger.html'
-        window.location = 'publicledger.html';
-    },
-
-    publicLedger: function() {
-        App.getTransactionByAccount(null,null);
-    },
-
-    showProjectLoad: function() {
-        var username = $.cookie("username");
-        var title = $.cookie("title");
-        var type = $.cookie("type");
-        var ethaddress = $.cookie("ethaddress");
-
-        $('#username').text(username);
-        $('#title').text(title);
-        $('#type').text(type);
-        $('#ethaddress').text(ethaddress);
-
-        var load = self.getProjects();
-
-        return true;
-    },
-
     getOneProject: function() {
         var ethaddress= $.cookie("ethaddress")
         var type = $.cookie('type');
@@ -512,7 +684,7 @@ const App = {
                                 <a class="" style="float:left"><b>Goal</b>: <span class="card-text">`+ result[2] +`</span></a> 
                                 <a class="" style="float:right"><b>Total Funding</b>: <span class="total">`+ result[3] +`</span></h6></a>     
                             </div>
-                            <div class="card-footer"><a href="#" id="`+ethaddress+`" class="btn btn-primary btn-sm donatebtn" onclick="App.showDetails(this.id)" >Check Details<a></div>
+                            <div class="card-footer"><a href="#" id="`+ethaddress+`" class="btn btn-primary btn-sm donatebtn" onclick="Donation.showDetails(this.id)" >Check Details<a></div>
                             </div>
                         </div>
                 </div>`;
@@ -548,7 +720,7 @@ const App = {
                                     
                             </div>
                             <small style="margin:0 auto">Created By: `+ proj[4] +`</small> 
-                            <div class="card-footer"><a href="#" id="`+proj[5]+`" class="btn btn-primary btn-sm donatebtn" onclick="App.showDetails(this.id)" >Check Details<a></div>
+                            <div class="card-footer"><a href="#" id="`+proj[5]+`" class="btn btn-primary btn-sm donatebtn" onclick="Donation.showDetails(this.id)" >Check Details<a></div>
                             </div>
                         </div>
                 `;
@@ -579,10 +751,10 @@ const App = {
             for(var i = 0; i < projectCount; i++) {
                 var projectCardId = 'project-card-' + i;
                 if(type == "Donor") {
-                    donortemplate = `<div class="card-footer text-right"><a href="#" class="btn btn-primary btn-sm donatebtn"  onclick="App.openModal('`+ projectCardId +`',this.id)">Donate Now</a></div>`;
+                    donortemplate = `<div class="card-footer text-right"><a href="#" class="btn btn-primary btn-sm donatebtn"  onclick="Project.openModal('`+ projectCardId +`',this.id)">Donate Now</a></div>`;
                 }
                 if(type == "Organisation") {
-                    donortemplate = `<div class="card-footer"><a href="#" class="btn btn-primary btn-sm donatebtn" onclick="App.showDetails(this.id)" >Check Details<a></div>`
+                    donortemplate = `<div class="card-footer"><a href="#" class="btn btn-primary btn-sm donatebtn" onclick="Donation.showDetails(this.id)" >Check Details<a></div>`
                 }
                 if(i % 4 == 0) {
                         var currentRowId = 'project-row-' + rowCount;
@@ -649,8 +821,6 @@ const App = {
 
     },
 
-    
-
     openModal: function(id,ethaddress) {
         var self = this
         
@@ -684,7 +854,7 @@ const App = {
             <div class="modal-footer">
               
               <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-              <button type="button" class="btn btn-primary" onclick="App.fundNow('`+ethaddress+`')">Save changes</button>
+              <button type="button" class="btn btn-primary" onclick="Donation.fundNow('`+ethaddress+`')">Save changes</button>
             </div>
           </div>
         </div>
@@ -696,21 +866,9 @@ const App = {
 
       $('#modal-'+id).modal('show');
     },
+}
 
-   
-
-    alertmsg: function(msg,content,type) {
-        $('#success').find('h5').text(msg)
-        $('#success').find('small').text(content)
-        if(type === 1) {
-            $('#success').addClass('alert-success')
-        }
-        else {
-            $('#success').addClass('alert-danger')
-        }
-        $('#success').show()
-    },
-
+const Donation = {
     fundNow: function(ethaddress) {
         
         var amount = $('#amount').val()
@@ -803,6 +961,7 @@ const App = {
     },
 
     getContributors: function(address) {
+        var self = this
         let InstanceUsed;
         FundingHub.deployed().then(instance => {
             return instance.contributors.call(0).then(result => {
@@ -824,175 +983,16 @@ const App = {
                     }
                     
                 }
-                App.createContribModal(data,address);
+                self.createContribModal(data,address);
             })
         })
     },
-
-    orgload: function() {
-        var self = this
-        var username = $.cookie("username");
-        var title = $.cookie("title");
-        var type = $.cookie("type");
-        
-
-        $('#username').text(username);
-        $('#title').text(title);
-        $('#type').text(type);
-        var InstanceUsed;
-        FundingHub.deployed().then(function(instance){
-            InstanceUsed = instance
-            return InstanceUsed.fundsCollectedByUser(username).then(result => {
-                $('#balance').text(result);
-            })
-        })
-        
-
-        
-        var proj = App.getOrgsProject();
-
-        return true;
-    },
-
-    userload: function() {
-        var self = this
-        var username = $.cookie("username");
-        var title = $.cookie("title");
-        var type = $.cookie("type");
-        var ethaddress = $.cookie("ethaddress");
-
-        $('#username').text(username);
-        $('#title').text(title);
-        $('#type').text(type);
-        $('#ethaddress').text(ethaddress);
-        var destinationBalance;
-        web3.eth.getBalance(ethaddress).then(function(destinationBalanceWei) {
-            console.log(destinationBalanceWei)
-             destinationBalance = self.fromWei(destinationBalanceWei);
-             $('#balance').text(destinationBalance) 
-         });
-
-        var load = App.getProjects();
-        
-
-        return true;
-    },
-
-    projload: function() {
-        var username = $.cookie("username");
-        var title = $.cookie("title");
-        var type = $.cookie("type");
-        var ethaddress = $.cookie("ethaddress");
-
-        $('#username').text(username);
-        $('#title').text(title);
-        $('#type').text(type);
-        $('#ethaddress').text(ethaddress);
-
-        var load = App.getProjects();
-
-        return true;
-    },
-
-    toWei: function(ethvalue) {
-        return web3.utils.toWei(ethvalue,"ether");
-    },
-
-    fromWei: function(ethvalue) {
-        return web3.utils.fromWei(ethvalue,"ether");
-    },
-
-   
-    
-
-  
-
-    getTransactionByAccount: function(endBlockNumber,startBlockNumber) {
-        
-        web3.eth.getBlockNumber(function(error,result) {
-            if (endBlockNumber == null) {
-                endBlockNumber = result;
-                console.log("Using endBlockNumber: ",endBlockNumber);
-              }
-            if (startBlockNumber == null) {
-                startBlockNumber = 0;
-                console.log("Using startBlockNumber: " + startBlockNumber);
-              }
-            
-              for (var i = startBlockNumber; i <= endBlockNumber; i++) {
-                console.log("Searching block " + i);
-                
-                web3.eth.getBlock(i,true,function(error,block){
-                    
-                        var transtemplate = "";
-                        block.transactions.forEach( function(e) {
-                          if (true) {
-                               transtemplate += `<tr><td>tx hash</td><td>` + e.hash + `</td></tr>
-                              <tr><td>nonce</td><td>` + e.nonce + `</td></tr>
-                              <tr><td>blockHash</td><td>` + e.blockHash + `</td></tr>
-                              <tr><td>blockNumber</td><td>` + e.blockNumber + `</td></tr>
-                              <tr><td>transactionIndex</td><td>` + e.transactionIndex + `</td></tr>
-                              <tr><td>from</td><td>` + e.from + `</td></tr> 
-                              <tr><td>to  </td><td>` + e.to + `</td></tr>
-                              <tr><td>value</td><td>` + e.value + `</td></tr>
-                              <tr><td>time</td><td>` + block.timestamp + ``  + new Date(block.timestamp * 1000).toGMTString() + `</td></tr>
-                              <tr><td>gasPrice</td><td>` + e.gasPrice + `</td></tr>
-                              <tr><td>gas </td><td>` + e.gas + `</td></tr>` 
-                          }
-                        }) 
-                        var card = `<div class="col-6"><div class="card bg-light mb-3" >
-                        <div class="card-header">Block `+block.number+`</div>
-                        <div class="card-body">
-                          <table class="table">
-                            <tr>
-                                <td>Hash</td>
-                                <td>`+ block.hash +`</td>
-                            </tr>
-                            <tr>
-                                <td>gasLimit</td>
-                                <td>`+block.gasLimit+`</td>
-                            </tr>
-                            <tr>
-                                <td>gasUsed</td>
-                                <td>`+block.gasUsed+`</td>
-                            </tr>
-                            <tr>
-                                <td>Timestamp</td>
-                                <td>`+ new Date(block.timestamp * 1000).toGMTString()  +`</td>
-                            </tr>
-                            <tr>
-                                <td>Transactions</td>
-                                <td><table class="table inside">`+ transtemplate +`</table></td>
-                            </tr>
-                            <tr>
-                                <td>Transaction Root</td>
-                                <td>`+ block.transactionsRoot +`</td>
-                            </tr>
-                           
-
-                          </table>
-                          
-                        </div>
-                      </div></div>`;       
-                        $('#ledger').append(card);
-                        
-                });
-                
-                
-              }
-
-            
-        })
-        
-    },
-
-   
-
-    
-    
 }
 
 window.App = App
+window.Project = Project
+window.UserMod = UserMod
+window.Donation = Donation
 
 window.addEventListener('load', function() {
     // Checking if Web3 has been injected by the browser (Mist/MetaMask)
